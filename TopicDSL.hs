@@ -2,6 +2,8 @@
 {-# LANGUAGE TemplateHaskell #-}
 module TopicDSL where
 
+
+
 import Data.List
 import TopicMachine
 import TopicParser
