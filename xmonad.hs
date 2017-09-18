@@ -26,8 +26,10 @@ import XMonad.Layout.Mosaic
 import XMonad.Layout.Circle
 import qualified XMonad.Layout.LayoutCombinators as L
 import XMonad.Layout.Spacing
+import qualified XMonad.Actions.Search as S
 import XMonad.Hooks.DynamicLog
 import XMonad.Prompt
+import XMonad.Prompt.Man
 import XMonad.Prompt.Workspace
 import XMonad.Prompt.XMonad
 -- import XMonad.Prompt.Eval
@@ -35,6 +37,7 @@ import XMonad.Actions.UpdatePointer
 import XMonad.Prompt.Man
 import XMonad.Layout.LayoutModifier
 import XMonad.Hooks.ManageDocks
+import qualified XMonad.Actions.FlexibleManipulate as Flex
 import XMonad.Layout.Fullscreen as F
 import XMonad.Layout.Spiral
 import XMonad.Layout.HintedTile
@@ -156,8 +159,8 @@ myXPConfig = greenXPConfig
 --
 myKeys conf@(XConfig {XMonad.modMask = modm}) = M.fromList $
 
+  [
     -- launch a terminal
-    [
       ((modm .|. shiftMask, xK_Return), currentTopic >>= \q -> spawnShell ( myTopicConfig q) q)
     -- Switch between layouts
     , ((modm .|. controlMask, xK_1), sendMessage $ L.JumpToLayout "Tall")
@@ -180,6 +183,7 @@ myKeys conf@(XConfig {XMonad.modMask = modm}) = M.fromList $
     -- launch gmrun
     , ((modm .|. shiftMask, xK_p     ), spawn "gmrun")
     , ((modm .|. shiftMask, xK_m ), manPrompt myXPConfig)
+    , ((modm .|. shiftMask, xK_s), S.promptSearchBrowser myXPConfig "/usr/bin/firefox" mySearchEngine)
     , ((modm .|. shiftMask, xK_g), gotoMenu)-- windowPromptGoto defaultXPConfig)
     , ((modm .|. shiftMask, xK_b), bringMenu)-- windowPromptBring defaultXPConfig
     -- close) focused window
@@ -237,7 +241,6 @@ myKeys conf@(XConfig {XMonad.modMask = modm}) = M.fromList $
     , ((modm           , xK_KP_Add), spawn "amixer -c 0 set Master 2dB+")
     , ((modm           , xK_KP_Subtract), spawn "amixer -c 0 set Master 2dB-")
     , ((modm .|. shiftMask, xK_l), spawn "xtrlock")
-    , ((modm .|. shiftMask, xK_j), spawn "zsh /home/eklerks/scripts/jt.sh")
 
     -- Toggle the status bar gap
     -- Use this binding with avoidStruts from Hooks.ManageDocks.
@@ -277,6 +280,7 @@ myKeys conf@(XConfig {XMonad.modMask = modm}) = M.fromList $
   , ((modm .|. shiftMask              , xK_a     ),  currentTopicAction ( myTopicConfig "home"))
   , ((modm              , xK_g     ), promptedGoto)
   , ((modm .|. shiftMask, xK_g     ), promptedShift)
+  , ((modm, xK_F1), manPrompt $ def {fgColor = "green", bgColor="black"})
   {- more  keys ... -}
   ]
   -- ++
@@ -337,6 +341,7 @@ promptedShift = workspacePrompt myXPConfig $ windows . W.shift
 --
 myMouseBindings (XConfig {XMonad.modMask = modm}) = M.fromList $
 
+
     -- mod-button1, Set the window to floating mode and move by dragging
     [ ((modm, button1), (\w -> focus w >> mouseMoveWindow w
                                        >> windows W.shiftMaster))
@@ -346,7 +351,8 @@ myMouseBindings (XConfig {XMonad.modMask = modm}) = M.fromList $
 
     -- mod-button3, Set the window to floating mode and resize by dragging
     , ((modm, button3), (\w -> focus w >> mouseResizeWindow w
-                                       >> windows W.shiftMaster))
+                                       >> windows W.shiftMaster)),
+    ((modm .|. shiftMask, button1), (\w -> focus w >> Flex.mouseWindow Flex.linear w))
 
     -- you may also bind events to the mouse scroll wheel (button4 and button5)
     ]
