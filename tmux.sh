@@ -5,7 +5,7 @@ export DIR="$2"
 if [[ -z "$TOPIC" ]]; then 
         export TOPIC="master"
 fi 
-
+echo "$TOPIC" 1>&2 
 SES_NAME="$(openssl rand -hex 3)"
 CLIENTS=$(tmux list-clients)
 echo "$CLIENTS"

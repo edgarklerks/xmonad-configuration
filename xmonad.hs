@@ -285,7 +285,7 @@ myKeys conf@(XConfig {XMonad.modMask = modm}) = M.fromList $
 
 lastTopic :: X Topic
 lastTopic = do xs <- getLastFocusedTopics
-               flashText defaultSTConfig (toRational 1/2) (show xs)
+               flashText def (toRational 1/2) (show xs)
                case xs of
                  [] -> return (defaultTopic ( myTopicConfig "home"))
                  (x:xs) -> return x
@@ -301,7 +301,7 @@ createTopicConfig dt td = let p1 (a,b,c) = a
                               p13 (a,b,c) = (a,c)
                               xs = evalTopicDescription td
 
-                          in defaultTopicConfig {
+                          in def {
                                topicDirs = M.fromList (p12 <$> xs),
                                defaultTopicAction = \t -> defaultAction myTopicConfig t "~",
                                defaultTopic = dt,
@@ -320,7 +320,7 @@ gotoSpare topic = do
           windows $ W.view topic
           wins <- gets $ W.integrate' . W.stack . W.workspace . W.current . windowset
           when (null wins) $ topicAction (myTopicConfig topic) topic
-          updatePointer (Relative 0.5 0.5)
+          updatePointer (0.5, 0.5) (0,0)
 
 currentTopic :: X Topic
 currentTopic = gets (W.tag . W.workspace . W.current . windowset)
@@ -464,7 +464,7 @@ main = do
 --
 
 
-defaults = defaultConfig {
+defaults = def {
       -- simple stuff
         terminal           = "urxvtcd",
         focusFollowsMouse  = myFocusFollowsMouse,
