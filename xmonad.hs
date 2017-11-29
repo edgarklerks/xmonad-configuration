@@ -20,6 +20,7 @@ import qualified XMonad.StackSet as W
 import qualified Data.Map        as M
 
 import Control.Monad
+import Data.Monoid
 
 import XMonad.Util.Cursor
 import XMonad.Layout.Mosaic
@@ -47,7 +48,7 @@ import XMonad.Actions.Search
 import XMonad.Actions.Warp
 import XMonad.Actions.TopicSpace
 import XMonad.Actions.ShowText
-import System.Cmd
+import System.Process
 import XMonad.Actions.Promote
 import XMonad.Hooks.EwmhDesktops as E
 import Data.List
@@ -58,42 +59,6 @@ import Control.Monad.Trans
 import TopicDSL
 
 myEditor = "/home/eklerks/scripts/emacs.vim"
--- | My topic config
- {-  defaultTopicConfig { topicDirs = M.fromList $ [
-               ("sources", "~/sources"),
-               ("hardware", "~/hardware"),
-               ("sanoma", "~/sources/sanoma"),
-               ("sanoma/dcp-core", "~/sources/sanoma/dcp-core"),
-               ("sanoma/dcp-content-hub", "~/sources/sanoma/dcp-content-hub"),
-               ("sanoma/dcp-analysis", "~/sources/sanoma/dcp-analysis"),
-               ("zsh-scripts", "~/zsh-scripts"),
-               ("conf", "~/sources/vim-zsh-vimperator-xmonad-configuration"),
-               ("xmonad", "~/.xmonad"),
-               ("books", "~/Dropbox/Sanoma Shared Stuff/Boeken"),
-               ("mathematics", "~/Dropbox/Sanoma Shared Stuff/Boeken/Mathematics"),
-               ("mathematica", "~/Mathematica"),
-               ("home", "~")
-               ]
-               , defaultTopicAction  = \x -> spawnShell x >*> 3
-               , defaultTopic = "home"
-               , topicActions = M.fromList [
-                 ("conf", spawnShell "conf" >> spawnShellIn "conf" "sources/vim-zsh-vimperator-xmonad-configuration" >*> 2 >> spawn myEditor)
-               , ("sources", spawnShell "sources" >*> 2 >> spawn myEditor >*> 1)
-               , ("sanoma", spawnShell "sanoma" >*> 2 >> spawn myEditor >*> 1)
-               , ("sanoma/dcp-core", spawnShell "sanoma/dcp-core" >*> 2 >> spawn myEditor >*> 1)
-               , ("sanoma/dcp-content-hub", spawnShell "sanoma/dcp-content-hub" >*> 2 >> spawn myEditor >*> 1)
-               , ("sanoma/dcp-analysis", spawnShell "sanoma/dcp-analysis" >*> 2 >> spawn myEditor >*> 1)
-               , ("browser", spawn "firefox" >*> 2)
-               , ("browser/chrome", spawn "google-chrome" >*> 2)
-               , ("chat", spawnShell "jitsy " >*> 1 >> spawn "jitsi")
-               , ("xmonad", spawnShell "xmonad" >*> 1)
-               , ("mathematics", spawnShell "mathematics" >*> 1)
-               , ("mathematica", spawnShell "mathematica" >*> 1)
-               , ("books", spawnShell "books" >*> 3)
-               , ("zsh-scripts", spawnShell "zsh-scripts" >*> 3)
-               ]
-        }
--}
 
 like :: XMonad.Query String -> String -> XMonad.Query Bool
 like q x = isInfixOf x `fmap` q
@@ -102,8 +67,6 @@ like q x = isInfixOf x `fmap` q
 
 regex :: XMonad.Query String -> String -> XMonad.Query Bool
 regex q x = ( =~~ x) =<< q
--- Dzen config
---
 
 
 toggleStrutsKey :: XConfig t -> (KeyMask, KeySym)
@@ -151,7 +114,7 @@ myModMask       = mod4Mask
 myNormalBorderColor  = "#00ff00"
 myFocusedBorderColor = "#ff0000"
 
-workspaceKeys = [xK_1..xK_9] ++ [xK_0]
+workspaceKeys = [xK_1..xK_9] <> [xK_0]
 
 myXPConfig = greenXPConfig
 ------------------------------------------------------------------------
@@ -167,6 +130,8 @@ myKeys conf@(XConfig {XMonad.modMask = modm}) = M.fromList $
     , ((modm .|. controlMask, xK_2), sendMessage $ L.JumpToLayout "Wide")
     , ((modm .|. controlMask, xK_3), sendMessage $ L.JumpToLayout "Full")
     , ((modm .|. controlMask, xK_4), sendMessage $ L.JumpToLayout "Mirror")
+    , ((modm .|. controlMask, xK_5), sendMessage $ L.JumpToLayout "Mosaic")
+    , ((modm .|. controlMask, xK_6), sendMessage $ L.JumpToLayout "Circle")
     , ((modm .|. controlMask, xK_u), spawn "ruby /home/edgar/remote.rb nsfw")
     , ((modm .|. controlMask, xK_r), spawn "ruby /home/edgar/remote.rb sfw")
     , ((modm .|. controlMask, xK_n), spawn "ruby /home/edgar/remote.rb")
@@ -180,6 +145,7 @@ myKeys conf@(XConfig {XMonad.modMask = modm}) = M.fromList $
     , ((modm, xK_Right), nextWS)
     , ((modm, xK_Down), shiftToPrev)
     , ((modm, xK_Up), shiftToNext)
+    , ((modm .|. controlMask, xK_o), ( flashText def ((toRational 1/2)) "hello" ) >> windows (W.swapUp))
     -- launch gmrun
     , ((modm .|. shiftMask, xK_p     ), spawn "gmrun")
     , ((modm .|. shiftMask, xK_m ), manPrompt myXPConfig)
@@ -221,6 +187,8 @@ myKeys conf@(XConfig {XMonad.modMask = modm}) = M.fromList $
 
     -- Swap the focused window with the previous window
     , ((modm .|. shiftMask, xK_k     ), windows W.swapUp    )
+    , ((modm .|. controlMask, xK_h), hideWindow)
+    , ((modm .|. shiftMask, xK_h), unhideAll)
 
     -- Shrink the master area
     , ((modm,               xK_h     ), sendMessage Shrink)
@@ -240,13 +208,13 @@ myKeys conf@(XConfig {XMonad.modMask = modm}) = M.fromList $
   --  , ((modm .|. controlMask              ,xK_e), evalPrompt  defaultEvalConfig defaultXPConfig)
     , ((modm           , xK_KP_Add), spawn "amixer -c 0 set Master 2dB+")
     , ((modm           , xK_KP_Subtract), spawn "amixer -c 0 set Master 2dB-")
-    , ((modm .|. shiftMask, xK_l), spawn "xtrlock")
+    , ((modm .|. shiftMask, xK_l), spawn "/home/eklerks/scripts/xtrlock")
 
     -- Toggle the status bar gap
     -- Use this binding with avoidStruts from Hooks.ManageDocks.
     -- See also the statusBar function from Hooks.DynamicLog.
     --
-    -- , ((modm              , xK_b     ), sendMessage ToggleStruts)
+    , ((modm              , xK_b     ), sendMessage ToggleStruts)
 
     -- Quit xmonad
     , ((modm .|. shiftMask, xK_q     ), io (exitWith ExitSuccess))
@@ -254,7 +222,7 @@ myKeys conf@(XConfig {XMonad.modMask = modm}) = M.fromList $
     -- Restart xmonad
     , ((modm              , xK_q     ), spawn "xmonad --recompile; xmonad --restart")
     ]
-    ++
+    <>
 
 
     -- mod-[1..9], Switch to workspace N
@@ -263,7 +231,7 @@ myKeys conf@(XConfig {XMonad.modMask = modm}) = M.fromList $
     [((m .|. modm, k), windows $ f i)
         | (i, k) <- zip (XMonad.workspaces conf) workspaceKeys
         , (f, m) <- [(W.greedyView, 0), (W.shift, shiftMask)]]
-    ++
+    <>
 
     --
     -- mod-{w,e,r}, Switch to physical/Xinerama screens 1, 2, or 3
@@ -275,17 +243,30 @@ myKeys conf@(XConfig {XMonad.modMask = modm}) = M.fromList $
         | (key, sc) <- [xK_e, xK_w, xK_r] `zip` [0..]
         , (f, m) <- [(gotoSpare, 0), (windows . W.shift, shiftMask)]]
   -- Topic spaces keys
-    ++
+   <>
   [ ((modm .|. shiftMask             , xK_n     ), currentTopic >>=  \q -> spawnShell ( myTopicConfig q) q) -- %! Launch terminal
   , ((modm .|. shiftMask              , xK_a     ),  currentTopicAction ( myTopicConfig "home"))
   , ((modm              , xK_g     ), promptedGoto)
   , ((modm .|. shiftMask, xK_g     ), promptedShift)
   , ((modm, xK_F1), manPrompt $ def {fgColor = "green", bgColor="black"})
-  {- more  keys ... -}
   ]
-  -- ++
-  -- [ ((modm, k), switchNthLastFocused myTopicConfig i)
-  -- | (i, k) <- zip [1..] workspaceKeys]
+
+hideWindow :: X ()
+hideWindow = withWindowSet $ \ws -> do
+           let screen = W.current ws
+           let workspace = W.workspace $ screen
+           case W.stack workspace of
+             Nothing -> return ()
+             Just windows -> do
+               let currentWindow = W.focus windows
+               hide currentWindow
+           return ()
+unhideAll :: X ()
+unhideAll = withWindowSet $ \ws -> do
+                    let windows = W.allWindows ws
+                    forM_ windows $ \w -> do
+                          reveal w
+
 
 lastTopic :: X Topic
 lastTopic = do xs <- getLastFocusedTopics
@@ -375,7 +356,7 @@ mosaicLayout = mosaic 5 fib
      fib = reverse $ take 5 $ fib'
         where fib' = 1 : 2 : zipWith (+) fib' (tail fib')
 
-myLayout = avoidStruts $ layoutHints $ fullscreenFull $ spacing 2 $ tiled Tall L.||| tiled Wide L.||| renamed [Replace "Mirror"] (Mirror (tiled Tall)) L.||| Full
+myLayout = avoidStruts $ layoutHints $ fullscreenFull $ spacing 2 $ tiled Tall L.||| tiled Wide L.||| renamed [Replace "Mirror"] (Mirror (tiled Tall)) L.||| Full L.||| mosaicLayout L.||| Circle
   where
      -- default tiling algorithm partitions the screen into two panes
      tiled   = HintedTile nmaster delta ratio Center
@@ -406,7 +387,7 @@ myLayout = avoidStruts $ layoutHints $ fullscreenFull $ spacing 2 $ tiled Tall L
 --
 myManageHook = composeAll
     [ className =? "MPlayer"        --> doFloat
-    , className =? "Gimp"           --> doFloat
+    , className =? "Gimp"           --> ( doFloat *> doShift "sources" )
     , (className `like` "XMathematica") <||> (appName  `like` "Wolfram") <||> (appName `like` "Drawing Tools")  --> doFloat
     , appName =? "desktop_window" --> doIgnore
     , appName =? "kdesktop"       --> doIgnore
@@ -422,8 +403,8 @@ myManageHook = composeAll
 -- Defines a custom handler function for X Events. The function should
 -- return (All True) if the default handler is to be run afterwards. To
 -- combine event hooks use mappend or mconcat from Data.Monoid.
---
-myEventHook = hintsEventHook <+> F.fullscreenEventHook <+> E.fullscreenEventHook <+> docksEventHook -- promoteWarp
+-- hintsEventHook
+myEventHook = ewmhDesktopsEventHook <+> F.fullscreenEventHook <+> E.fullscreenEventHook <+> docksEventHook -- promoteWarp
 
 ------------------------------------------------------------------------
 -- Status bars and logging
@@ -441,10 +422,9 @@ myLogHook = dynamicLogWithPP xmobarPP
 -- per-workspace layout choices.
 --
 -- By default, do nothing.
-myStartupHook = do
+myStartupHook = void $ do
         liftIO $ system "zsh /home/eklerks/.xmonad.zsh &"
         setDefaultCursor xC_spider
-        return ()
 
 ------------------------------------------------------------------------
 -- Now run xmonad with all the defaults we set up.
@@ -458,9 +438,10 @@ topicDescription = fillActions myTopicConfig $(fromDisk )
 
 main = do
 --    system("setxkbmap -layout us")
-    xconfig <- xmobar defaults
+     xconfig <- xmobar defaults
 
-    xmonad $ ewmh xconfig
+
+     xmonad $ ewmh xconfig
 
 -- A structure containing your configuration settings, overriding
 -- fields in the default config. Any you don't override, will
@@ -497,4 +478,4 @@ defaults = def {
 -- Search function
 --
 
-mySearchEngine = intelligent (wikipedia !> alpha !> mathworld !> hoogle !> hackage !> scholar !> prefixAware google)
+mySearchEngine = (wikipedia !> alpha !> mathworld !> hoogle !> hackage !> scholar !> prefixAware google)

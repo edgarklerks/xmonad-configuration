@@ -2,10 +2,16 @@
 export TOPIC="${1-master}"
 export DIR="$2"
 
-if [[ -z "$TOPIC" ]]; then 
-        export TOPIC="master"
+if [[ ! -r "$HOME/.ssh/ssh-agent.socket" ]]; then 
+        eval `ssh-agent -a $HOME/.ssh/ssh-agent.socket` 
 fi 
-echo "$TOPIC" 1>&2 
+export SSH_AUTH_SOCK="$HOME/.ssh/ssh-agent.socket"
+
+
+if [[ -z "$TOPIC" ]]; then
+        export TOPIC="master"
+fi
+echo "I belong to $TOPIC" 1>&2
 SES_NAME="$(openssl rand -hex 3)"
 CLIENTS=$(tmux list-clients)
 echo "$CLIENTS"

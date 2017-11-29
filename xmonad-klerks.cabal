@@ -50,7 +50,7 @@ executable xmonad
   -- .hs or .lhs file containing the Main module.
   main-is:             xmonad.hs
 
-  ghc-options: +RTS -N8 -RTS -threaded -feager-blackholing -funbox-strict-fields -O2 -optlo-O3 -optlo-globalopt -optlo-mem2reg -optlo-prune-eh  -with-rtsopts=-N8   -optlo-loop-unswitch -fllvm  -flate-dmd-anal  -fspec-constr -optlo-slp-vectorizer
+  ghc-options: +RTS -N8 -RTS -threaded -feager-blackholing -funbox-strict-fields -O2 -optlo-O3 -optlo-globalopt -optlo-mem2reg -optlo-prune-eh  -with-rtsopts=-N8   -optlo-loop-unswitch -fllvm  -flate-dmd-anal  -fspec-constr -optlo-slp-vectorizer 
   -- Modules included in this executable, other than Main.
   other-modules: TopicDSL, TopicMachine, TopicParser 
 

@@ -193,9 +193,9 @@ spawnShellInWith topic dir cmd = spawn $ myShell [("-cd", dir)] topic cmd
 
 myShell :: [(String,String)] -> String -> String -> String
 myShell opts title cmd = "urxvt " ++ (unwords $ jointuples (nubBy (\a b -> fst a == fst b) $ defaultopts ++ opts)) ++ (case cmd of
-                                                                                                             [] -> ""
-                                                                                                             x -> " -e " ++ cmd
-                                                                                                             )
+                                                                                                               [] -> ""
+                                                                                                               x -> " -e " ++ cmd
+                                                                                                               )
                 where defaultopts = [
                                     ("-fade", "20"),
                                     ("+sb", ""),
