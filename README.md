@@ -9,21 +9,9 @@ It works together with my dotfiles config.
 
 # Installation #
 
-This is almost undoable for others, I just shared it for sharing some ideas. But for the willing:
-
-import my dotfiles repository.
-Copy all files to your home directory.
-
-install rxvt(d), tmux, zsh, fbpanel, trayer, diodon and quiterss
-
-Change .xmonad.zsh if you want.
-Change tmux.sh if you want.
-
 compile with:
 
-    cabal configure
-	cabal build
-
-cp dist/build/xmonad/xmonad xmonad
+    stack install 
+    cp dist/build/xmonad/xmonad xmonad
 
 and run xmonad in an XSession.
