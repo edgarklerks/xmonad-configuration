@@ -14,6 +14,7 @@ import qualified  Data.Vector as V
 import Control.Applicative
 import Control.Monad.Trans.Except
 import Control.Monad.Trans
+import Control.Monad.Fail
 import Data.Monoid
 import Data.Bits
 import qualified Data.IntMap as M
@@ -138,7 +139,7 @@ buildSymbolTable (Program xs) = foldr step mempty xs
                        step (l, Label lbl) z = S.insert lbl (lineSymbol lbl (l - 1)) z
                        step x z = z
 
-interpreterStep :: Monad m => MachineSate m -> MachineContext m (MachineSate m)
+interpreterStep :: (MonadFail m, Monad m) => MachineSate m -> MachineContext m (MachineSate m)
 interpreterStep ms | (instructionPointer ms) >= (V.length (head $ program ms)) = errorsignal ms "program exited unexpectedly"
 interpreterStep ms = let ip = instructionPointer ms
                          stk = stack ms
@@ -158,7 +159,7 @@ interpreterStep ms = let ip = instructionPointer ms
                           Opcode opc -> handleOpcode opc ms
                           x -> pure $ pushStack x (incInstructionPtr ms)
 
-handleOpcode :: Monad m => Opcode -> MachineSate m -> MachineContext m (MachineSate m)
+handleOpcode :: (Monad m,MonadFail m) => Opcode -> MachineSate m -> MachineContext m (MachineSate m)
 handleOpcode If ms = do ([s1,s2,s3], ms') <- (takeStack 3 ms)
                         case s1 of
                              Bool True -> (valueToSymbol ms s2) >>= \v -> (callSymbol  v (incInstructionPtr $ incInstructionPtr ms'))
@@ -387,7 +388,7 @@ iterateN n f a = f a >>= \b -> iterateN (n - 1) f b
 
 newtype RepeatM m a = RM { unRVM :: m a }
 
-bbq :: Monad m => MachineSate m -> m (Either String (MachineSate m))
+bbq :: (MonadFail m, Monad m) => MachineSate m -> m (Either String (MachineSate m))
 bbq ms = runExceptT $ worker ms
                   where worker ms = do res <- interpreterStep ms
                                        let ins = (currentInstruction res)

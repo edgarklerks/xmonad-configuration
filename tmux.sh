@@ -1,9 +1,10 @@
 #!/bin/zsh
 export TOPIC="${1-master}"
 export DIR="$2"
+export LC_ALL="en_US.UTF-8"
 
 if [[ ! -r "$HOME/.ssh/ssh-agent.socket" ]]; then 
-        eval `ssh-agent -a $HOME/.ssh/ssh-agent.socket` 
+        eval `ssh-agent -t 4H -a $HOME/.ssh/ssh-agent.socket` 
 fi 
 export SSH_AUTH_SOCK="$HOME/.ssh/ssh-agent.socket"
 
